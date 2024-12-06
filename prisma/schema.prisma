@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Subject {
+  Maths
+  English
+  Physics
+  Chemistry
+  Compsci
+  Foreign
+  History
+  Economics
+  Art
+}
+
+enum Level {
+  Beginner
+  Intermediate
+  Advanced
+  Expert
+}
+
+enum OrderStatus {
+  Pending
+  Paid
+  Canceled
+}
+
+model Guide {
+  id          Int       @id @default(autoincrement())
+  title       String    @default("Tanulási útmutató")
+  description String
+  price       Int
+  subject     Subject
+  level       Level
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  orders Order[] @relation("GuideOrders")
+}
+
+model Lesson {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  price       Int
+  startTime   DateTime
+  endTime     DateTime
+  subject     Subject
+  level       Level
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  hostId      Int
+  host        User      @relation(fields: [hostId], references: [id])
+
+  participants User[]   @relation("LessonParticipants")
+  orders      Order[]   @relation("LessonOrders")
+}
+
+model User {
+  id          Int     @id @default(autoincrement())
+  name        String
+  password    String
+  email       String
+  address     String
+  phoneNumber String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authoredGuides Guide[]
+  orders         Order[]
+  hostedLessons  Lesson[]
+  participatedLessons Lesson[] @relation("LessonParticipants")
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  totalPrice Int
+  status     OrderStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customerId Int
+  customer   User @relation(fields: [customerId], references: [id])
+
+  guides  Guide[]  @relation("GuideOrders")
+  lessons Lesson[] @relation("LessonOrders")
+}
